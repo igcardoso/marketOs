@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", function () {
               border: 3px solid #FFFFFF;`
 
               // Coordenadas do Ponta A - Táxi
-              const coordTaxi = [-12.827765, -38.255511];
+              const coordTaxi = [`${doc.data().latitude}`, `${doc.data().longitude}`];
               // Coordenadas do Ponta B - Usuário
               const coordUser = [`${pos.coords.latitude}`,
                 `${pos.coords.longitude}`];
@@ -126,9 +126,9 @@ document.addEventListener("DOMContentLoaded", function () {
               }).addTo(map);
 
               function startService () {
-                // Array de coordenadas. Simula o táxi enviando a localização para o APP.
-                const latlng = [{
-                  lat: `${doc.data().latitude}`, lng: `${doc.data().longitude}`
+              // Array de coordenadas. Simula o táxi enviando a localização para o APP.
+              const latlng = [{
+              lat: `${doc.data().latitude}`, lng: `${doc.data().longitude}`
                 }]
 
                 // Personalizar Ponto na mapa com imagem do Usuário.
