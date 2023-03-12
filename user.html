@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Geolocation</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .leaflet-marker-icon,
+    .leaflet-marker-shadow {
+      display: none !important;
+    }
+
+    .pointers,
+    .taxi-pointers {
+      display: block !important;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div id="map" style="width:100%; height: 100vh"></div>
+  <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+
+  <!-- Firebase App is always required and must be first -->
+  <script src="https://www.gstatic.com/firebasejs/5.4.1/firebase-app.js"></script>
+  <!-- Add additional services that you want to use -->
+  <script src="https://www.gstatic.com/firebasejs/5.4.1/firebase-firestore.js"></script>
+  <!-- Inicializa o firebase -->
+  <script>
+
+    var config = {
+      apiKey: "AIzaSyAKO2hI1QuHvV05WXKfB1_CzvKpZrw2HTA",
+      authDomain: "supermarketat-home-os.firebaseapp.com",
+      projectId: "supermarketat-home-os",
+      storageBucket: "supermarketat-home-os.appspot.com",
+      messagingSenderId: "1038946810007",
+      appId: "1:1038946810007:web:614abb2bdab7f00351d1d2",
+      measurementId: "G-2B16FVZ3Q6"
+    };
+
+    firebase.initializeApp(config);
+    // Apenas para remover um warning
+    firebase.firestore().settings({
+      timestampsInSnapshots: true,
+
+    });
+
+    const db = firebase.firestore()
+
+    db.collection('geolocation').doc('userLocation').onSnapshot((doc)=> {
+      console.log("objeto:",
+        doc.data());
+
+      function success(pos) {
+        console.log(pos.coords.latitude, pos.coords.longitude);
+        db.collection('geolocation').doc('deliveryman').update({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude
+        });
+        // Personalizar css no mapa
+        let myCustomColourUser = 'background-color: red;'
+        const markerHtml = `
+        width: 3rem;
+        height: 3rem;
+        display: block;
+        left: -1.5rem;
+        top: -1.5rem;
+        position: relative;
+        border-radius: 3rem 3rem 0;
+        transform: rotate(45deg);
+        border: 3px solid #FFFFFF;`
+
+        // Coordenadas do Ponta A - Táxi
+        const coordTaxi = [-11.732997565990585, -61.78596675395966];
+        // Coordenadas do Ponta B - Usuário
+        const coordUser = [`${doc.data().latitude}`,
+          `${doc.data().longitude}`];
+
+        // Iniciar o mapa com coordenadas do ponto A
+        const map = L.map('map').setView(coordTaxi, 40);
+
+        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
+
+
+        // Personalizar Ponto na mapa com imagem do táxi.
+        const taxiIcon = L.icon({
+          className: "taxi-pointers",
+          iconUrl: 'taxi.png',
+          iconSize: [45, 45]
+        })
+        const marker = L.marker(coordTaxi, {
+          icon: taxiIcon
+        }).addTo(map);
+
+        function startService () {
+          // Array de coordenadas. Simula o táxi enviando a localização para o APP.
+          const latlng = [{
+            lat: `${pos.coords.latitude}`, lng: `${pos.coords.longitude}`
+          }]
+
+          // Personalizar Ponto na mapa com imagem do Usuário.
+          const icon = L.divIcon({
+            className: "pointers",
+            iconAnchor: [0, 24],
+            labelAnchor: [-6, 0],
+            popupAnchor: [0, -36],
+            html: `<span style="${markerHtml}${myCustomColourUser}" />`
+          })
+          var newMarker = L.marker([coordUser[0], coordUser[1]], {
+            icon
+          }).addTo(map);
+
+          // Identifica a melhor rota para iniciar a viagem.
+          L.Routing.control({
+            waypoints: [
+              L.latLng(coordTaxi[0], coordTaxi[1]),
+              L.latLng(coordUser[0], coordUser[1])
+            ]
+          }).on('routesfound', function (e) {
+            // Loop de coordenadas. Simula o táxi enviando a localização para o APP.
+            latlng.forEach(function (coord, index) {
+              setTimeout(function () {
+                marker.setLatLng([coord.lat, coord.lng]);
+                // Identifica o final da viagem.
+                if (coord.lat === coordUser[0] && coord.lng === coordUser[1]) {
+                  alert('Seu táxi acabou de chegar!')
+                }
+              },
+                1000 * index)
+            })
+
+          }).addTo(map);
+        };
+
+        startService()
+      }
+
+      function error(err) {
+        console.log(err);
+      }
+
+      var watchID = navigator.geolocation.watchPosition(success, error, {
+        enableHighAccuracy: true,
+        timeout: 5000
+      });
+
+      return doc.data();
+    });
+  </script>
+
+
+</body>
+
+</html>
