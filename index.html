@@ -90,13 +90,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 longitude: pos.coords.longitude
               });
               // Personalizar css no mapa
-              let myCustomColourUser = 'background-image: url("' + user.photoURL + '");'
+              let myCustomColourUser = 'background: #000000;'
               const markerHtml = `
               width: 3rem;
               height: 3rem;
               display: block;
               left: -1.5rem;
               top: -1.5rem;
+              overflow: hidden;
               position: relative;
               border-radius: 3rem 3rem 0;
               transform: rotate(45deg);
